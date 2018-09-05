@@ -1,0 +1,8 @@
+# vim temporary files.
+*.swp
+
+# Virtualenvs.
+env*/
+
+# Python byte-coded files.
+*.pyc
