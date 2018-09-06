@@ -6,3 +6,6 @@ env*/
 
 # Python byte-coded files.
 *.pyc
+
+# Documentation builds.
+doc/build
