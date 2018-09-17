@@ -580,7 +580,7 @@ class GLPI:
         # Function for mapping field id from field uid if field_id is not a number.
         def field_id(itemtype, field):
             return (int(field)
-                    if str(field).isnumeric()
+                    if re.match('^\d+$', str(field))
                     else self.field_id(itemtype, field))
 
         # Format 'criteria' and 'metacriteria' parameters.
