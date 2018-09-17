@@ -591,7 +591,7 @@ class GLPI:
                        for filter_param, value in criterion.items()})
         # Format 'forcedisplay' parameters.
         kwargs.update({'forcedisplay[{:d}]'.format(idx): field_id(itemtype, field)
-                      for idx, field in enumerate(kwargs.get('forcedisplay', []) or [])})
+                      for idx, field in enumerate(kwargs.pop('forcedisplay', []) or [])})
 
         response = self.session.get(self._set_method('search', itemtype),
                                     params=kwargs)
