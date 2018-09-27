@@ -35,7 +35,7 @@ def connect(url, apptoken, auth):
         >>> except GLPIError as err:
         >>>     print(str(err))
     """
-    glpi = GLPI(url, apptoken, usertoken)
+    glpi = GLPI(url, apptoken, auth)
     try:
         yield glpi
     finally:
