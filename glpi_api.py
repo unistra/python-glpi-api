@@ -32,7 +32,7 @@ def connect(url, apptoken, auth):
         >>> try:
         >>>     with glpi_api.connect(URL, APPTOKEN, USERTOKEN) as glpi:
         >>>         print(glpi.get_config())
-        >>> except GLPIError as err:
+        >>> except glpi_api.GLPIError as err:
         >>>     print(str(err))
     """
     glpi = GLPI(url, apptoken, auth)
