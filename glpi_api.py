@@ -13,6 +13,13 @@ from functools import wraps
 from base64 import b64encode
 from contextlib import contextmanager
 
+"""
+  Remove InsecureRequestWarning
+"""
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
+
 class GLPIError(Exception):
     pass
 
