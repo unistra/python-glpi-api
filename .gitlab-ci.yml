@@ -1,0 +1,15 @@
+image: python-ci:latest
+
+pages:
+    stage: deploy
+    script:
+    - pip3 install sphinx sphinx-rtd-theme
+    - cd doc && make html && cd ..
+    - mkdir .public
+    - cp -r doc/build/html/* .public
+    - mv .public public
+    artifacts:
+        paths:
+        - public
+    only:
+    - master
