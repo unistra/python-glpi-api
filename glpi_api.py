@@ -8,10 +8,10 @@ from __future__ import unicode_literals
 import re
 import os
 import sys
-import requests
 from functools import wraps
 from base64 import b64encode
 from contextlib import contextmanager
+import requests
 
 """
   Remove InsecureRequestWarning
@@ -21,6 +21,7 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
 class GLPIError(Exception):
+    """Exception raised by this module."""
     pass
 
 @contextmanager
@@ -587,18 +588,18 @@ class GLPI:
         # Function for mapping field id from field uid if field_id is not a number.
         def field_id(itemtype, field):
             return (int(field)
-                    if re.match('^\d+$', str(field))
+                    if re.match(r'^\d+$', str(field))
                     else self.field_id(itemtype, field))
 
         # Format 'criteria' and 'metacriteria' parameters.
         kwargs.update({'{:s}[{:d}][{:s}]'.format(param, idx, filter_param):
                         field_id(itemtype, value) if filter_param == 'field' else value
                        for param in ('criteria', 'metacriteria')
-                       for idx, criterion in enumerate(kwargs.pop(param, []) or [])
-                       for filter_param, value in criterion.items()})
+                       for idx, c in enumerate(kwargs.pop(param, []) or [])
+                       for filter_param, value in c.items()})
         # Format 'forcedisplay' parameters.
         kwargs.update({'forcedisplay[{:d}]'.format(idx): field_id(itemtype, field)
-                      for idx, field in enumerate(kwargs.pop('forcedisplay', []) or [])})
+                       for idx, field in enumerate(kwargs.pop('forcedisplay', []) or [])})
 
         response = self.session.get(self._set_method('search', itemtype),
                                     params=kwargs)
