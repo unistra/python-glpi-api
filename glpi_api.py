@@ -13,19 +13,13 @@ from base64 import b64encode
 from contextlib import contextmanager
 import requests
 
-"""
-  Remove InsecureRequestWarning
-"""
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-
 
 class GLPIError(Exception):
     """Exception raised by this module."""
     pass
 
 @contextmanager
-def connect(url, apptoken, auth):
+def connect(url, apptoken, auth, verify_certs=True):
     """Context manager that authenticate to GLPI when enter and kill application
     session in GLPI when leaving:
 
@@ -42,8 +36,10 @@ def connect(url, apptoken, auth):
         >>>         print(glpi.get_config())
         >>> except glpi_api.GLPIError as err:
         >>>     print(str(err))
+
+    You can set ``verify_certs`` to *False* to ignore invalid SSL certificates.
     """
-    glpi = GLPI(url, apptoken, auth)
+    glpi = GLPI(url, apptoken, auth, verify_certs)
     try:
         yield glpi
     finally:
@@ -96,15 +92,21 @@ class GLPI:
                    apptoken='YOURAPPTOKEN',
                    auth=('USERNAME', 'PASSWORD'))
     """
-    def __init__(self, url, apptoken, auth):
+    def __init__(self, url, apptoken, auth, verify_certs=True):
         """Connect to GLPI and retrieve session token which is put in a
         ``requests`` session as attribute.
         """
         self.url = url
 
+        # Initialize session.
+        self.session = requests.Session()
+        if not verify_certs:
+            from requests.packages.urllib3.exceptions import InsecureRequestWarning
+            requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+            self.session.verify = False
+
         # Connect and retrieve token.
         session_token = self._init_session(apptoken, auth)
-        self.session = requests.Session()
 
         # Set required headers.
         self.session.headers = {
@@ -155,8 +157,8 @@ class GLPI:
             'Authorization': authorization,
             'App-Token': apptoken
         }
-        response = requests.get(url=self._set_method('initSession'),
-                                headers=init_headers)
+        response = self.session.get(url=self._set_method('initSession'),
+                                    headers=init_headers)
 
         return {
             200: lambda: response.json()['session_token'],
