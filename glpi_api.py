@@ -16,7 +16,6 @@ import requests
 
 class GLPIError(Exception):
     """Exception raised by this module."""
-    pass
 
 @contextmanager
 def connect(url, apptoken, auth, verify_certs=True):
@@ -73,6 +72,17 @@ def _convert_bools(kwargs):
     return {key: str(val).lower() if isinstance(val, bool) else val
             for key, val in kwargs.items()}
 
+def _catch_errors(func):
+    """Decorator function for catching communication error
+    and raising an exception."""
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        try:
+            return func(self, *args, **kwargs)
+        except requests.exceptions.RequestException as err:
+            raise GLPIError('communication error: {:s}'.format(str(err)))
+    return wrapper
+
 class GLPI:
     """Class for interacting with GLPI using the REST API.
 
@@ -117,17 +127,6 @@ class GLPI:
 
         # Use for caching field id/uid map.
         self._fields = {}
-
-    def _catch_errors(func):
-        """Decorator function for catching communication error
-        and raising an exception."""
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            try:
-                return func(self, *args, **kwargs)
-            except requests.exceptions.RequestException as err:
-                raise GLPIError('communication error: {:s}'.format(str(err)))
-        return wrapper
 
     def _set_method(self, *endpoints):
         """Generate the URL from ``endpoints``."""
