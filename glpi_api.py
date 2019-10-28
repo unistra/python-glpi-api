@@ -161,10 +161,10 @@ class GLPI:
                                     headers=init_headers)
 
         return {
-            200: lambda: response.json()['session_token'],
-            400: lambda: _glpi_error(response),
-            401: lambda: _glpi_error(response)
-        }.get(response.status_code, lambda: _unknown_error(response))()
+            200: lambda r: r.json()['session_token'],
+            400: _glpi_error,
+            401: _glpi_error
+        }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
     def kill_session(self):
@@ -184,10 +184,10 @@ class GLPI:
         """
         response = self.session.get(self._set_method('killSession'))
         {
-            200: lambda: response.text,
-            400: lambda: _glpi_error(response),
-            401: lambda: _glpi_error(response)
-        }.get(response.status_code, lambda: _unknown_error(response))()
+            200: lambda r: r.text,
+            400: _glpi_error,
+            401: _glpi_error
+        }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
     def get_my_profiles(self):
@@ -208,10 +208,10 @@ class GLPI:
         """
         response = self.session.get(self._set_method('getMyProfiles'))
         return {
-            200: lambda: response.json()['myprofiles'],
-            400: lambda: _glpi_error(response),
-            401: lambda: _glpi_error(response)
-        }.get(response.status_code, lambda: _unknown_error(response))()
+            200: lambda r: r.json()['myprofiles'],
+            400: _glpi_error,
+            401: _glpi_error
+        }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
     def get_active_profile(self):
@@ -231,10 +231,10 @@ class GLPI:
         """
         response = self.session.get(self._set_method('getActiveProfile'))
         return {
-            200: lambda: response.json()['active_profile'],
-            400: lambda: _glpi_error(response),
-            401: lambda: _glpi_error(response)
-        }.get(response.status_code, lambda: _unknown_error(response))()
+            200: lambda r: r.json()['active_profile'],
+            400: _glpi_error,
+            401: _glpi_error
+        }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
     def set_active_profile(self, profile_id):
@@ -256,11 +256,11 @@ class GLPI:
         response = self.session.post(self._set_method('changeActiveProfile'),
                                      json={'profiles_id': profile_id})
         {
-            200: lambda: None,
-            400: lambda: _glpi_error(response),
-            401: lambda: _glpi_error(response),
-            404: lambda: _glpi_error(response)
-        }.get(response.status_code, lambda: _unknown_error(response))()
+            200: lambda r: None,
+            400: _glpi_error,
+            401: _glpi_error,
+            404: _glpi_error
+        }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
     def get_my_entities(self):
@@ -277,10 +277,10 @@ class GLPI:
         """
         response = self.session.get(self._set_method('getMyEntities'))
         return {
-            200: lambda: response.json()['myentities'],
-            400: lambda: _glpi_error(response),
-            401: lambda: _glpi_error(response)
-        }.get(response.status_code, lambda: _unknown_error(response))()
+            200: lambda r: r.json()['myentities'],
+            400: _glpi_error,
+            401: _glpi_error
+        }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
     def get_active_entity(self):
@@ -298,10 +298,10 @@ class GLPI:
         """
         response = self.session.get(self._set_method('getActiveEntities'))
         return {
-            200: lambda: response.json()['active_entity'],
-            400: lambda: _glpi_error(response),
-            401: lambda: _glpi_error(response)
-        }.get(response.status_code, lambda: _unknown_error(response))()
+            200: lambda r: r.json()['active_entity'],
+            400: _glpi_error,
+            401: _glpi_error
+        }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
     def set_active_entity(self, entity_id='all', is_recursive=False):
@@ -318,9 +318,10 @@ class GLPI:
         response = self.session.post(self._set_method('changeActiveEntities'),
                                      json=data)
         return {
-            200: lambda: None,
-            400: lambda: _glpi_error(response), 401: lambda: _glpi_error(response)
-        }.get(response.status_code, lambda: _unknown_error(response))()
+            200: lambda r: None,
+            400: _glpi_error,
+            401: _glpi_error
+        }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
     def get_full_session(self):
@@ -339,10 +340,10 @@ class GLPI:
         """
         response = self.session.get(self._set_method('getFullSession'))
         return {
-            200: lambda: response.json()['session'],
-            400: lambda: _glpi_error(response),
-            401: lambda: _glpi_error(response)
-        }.get(response.status_code, lambda: _unknown_error(response))()
+            200: lambda r: r.json()['session'],
+            400: _glpi_error,
+            401: _glpi_error
+        }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
     def get_config(self):
@@ -361,9 +362,9 @@ class GLPI:
         """
         response = self.session.get(self._set_method('getGlpiConfig'))
         return {
-            200: lambda: response.json(),
-            400: lambda: _glpi_error(response)
-        }.get(response.status_code, lambda: _unknown_error(response))()
+            200: lambda r: r.json(),
+            400: _glpi_error
+        }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
     def get_item(self, itemtype, item_id, **kwargs):
@@ -396,12 +397,12 @@ class GLPI:
         response = self.session.get(self._set_method(itemtype, item_id),
                                     params=_convert_bools(kwargs))
         return {
-            200: lambda: response.json(),
-            400: lambda: _glpi_error(response),
-            401: lambda: _glpi_error(response),
+            200: lambda r: r.json(),
+            400: _glpi_error,
+            401: _glpi_error,
             # If object is not found, return None.
-            404: lambda: None
-        }.get(response.status_code, lambda: _unknown_error(response))()
+            404: lambda r: None
+        }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
     def get_all_items(self, itemtype, **kwargs):
@@ -426,11 +427,11 @@ class GLPI:
         response = self.session.get(self._set_method(itemtype),
                                     params=_convert_bools(kwargs))
         return {
-            200: lambda: response.json(),
-            206: lambda: response.json(),
-            400: lambda: _glpi_error(response),
-            401: lambda: _glpi_error(response)
-        }.get(response.status_code, lambda: _unknown_error(response))()
+            200: lambda r: r.json(),
+            206: lambda r: r.json(),
+            400: _glpi_error,
+            401: _glpi_error
+        }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
     def get_sub_items(self, itemtype, item_id, sub_itemtype, **kwargs):
@@ -454,10 +455,10 @@ class GLPI:
         response = self.session.get(url,
                                     params=_convert_bools(kwargs))
         return {
-            200: lambda: response.json(),
-            400: lambda: _glpi_error(response),
-            401: lambda: _glpi_error(response)
-        }.get(response.status_code, lambda: _unknown_error(response))()
+            200: lambda r: r.json(),
+            400: _glpi_error,
+            401: _glpi_error
+        }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
     def get_multiple_items(self, *items):
@@ -487,10 +488,10 @@ class GLPI:
         response = self.session.get(self._set_method('getMultipleItems'),
                                     params=format_items(items))
         return {
-            200: lambda: response.json(),
-            400: lambda: _glpi_error(response),
-            401: lambda: _glpi_error(response)
-        }.get(response.status_code, lambda: _unknown_error(response))()
+            200: lambda r: r.json(),
+            400: _glpi_error,
+            401: _glpi_error
+        }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
     def list_search_options(self, itemtype, raw=False):
@@ -514,10 +515,10 @@ class GLPI:
         response = self.session.get(self._set_method('listSearchOptions', itemtype),
                                     params='raw' if raw else None)
         return {
-            200: lambda: response.json(),
-            400: lambda: _glpi_error(response),
-            401: lambda: _glpi_error(response)
-        }.get(response.status_code, lambda: _unknown_error(response))()
+            200: lambda r: r.json(),
+            400: _glpi_error,
+            401: _glpi_error
+        }.get(response.status_code, _unknown_error)(response)
 
     def _map_fields(self, itemtype):
         """Private method that returns a mapping between fields uid and fields
@@ -606,11 +607,11 @@ class GLPI:
         response = self.session.get(self._set_method('search', itemtype),
                                     params=kwargs)
         return {
-            200: lambda: response.json().get('data', []),
-            206: lambda: response.json().get('data', []),
-            400: lambda: _glpi_error(response),
-            401: lambda: _glpi_error(response)
-        }.get(response.status_code, lambda: _unknown_error(response))()
+            200: lambda r: r.json().get('data', []),
+            206: lambda r: r.json().get('data', []),
+            400: _glpi_error,
+            401: _glpi_error
+        }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
     def add(self, itemtype, *items):
@@ -629,11 +630,11 @@ class GLPI:
         response = self.session.post(self._set_method(itemtype),
                                      json={'input': items})
         return {
-            201: lambda: response.json(),
-            207: lambda: response.json()[1],
-            400: lambda: _glpi_error(response),
-            401: lambda: _glpi_error(response)
-        }.get(response.status_code, lambda: _unknown_error(response))()
+            201: lambda r: r.json(),
+            207: lambda r: r.json()[1],
+            400: _glpi_error,
+            401: _glpi_error
+        }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
     def update(self, itemtype, *items):
@@ -654,11 +655,11 @@ class GLPI:
         response = self.session.put(self._set_method(itemtype),
                                     json={'input': items})
         return {
-            200: lambda: response.json(),
-            207: lambda: response.json()[1],
-            400: lambda: _glpi_error(response),
-            401: lambda: _glpi_error(response)
-        }.get(response.status_code, lambda: _unknown_error(response))()
+            200: lambda r: r.json(),
+            207: lambda r: r.json()[1],
+            400: _glpi_error,
+            401: _glpi_error
+        }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
     def delete(self, itemtype, *items, **kwargs):
@@ -680,9 +681,9 @@ class GLPI:
                                        params=_convert_bools(kwargs),
                                        json={'input': items})
         return {
-            200: lambda: response.json(),
-            204: lambda: response.json(),
-            207: lambda: response.json()[1],
-            400: lambda: _glpi_error(response),
-            401: lambda: _glpi_error(response)
-        }.get(response.status_code, lambda: _unknown_error(response))()
+            200: lambda r: r.json(),
+            204: lambda r: r.json(),
+            207: lambda r: r.json()[1],
+            400: _glpi_error,
+            401: _glpi_error
+        }.get(response.status_code, _unknown_error)(response)
