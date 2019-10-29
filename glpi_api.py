@@ -8,11 +8,24 @@ from __future__ import unicode_literals
 import re
 import os
 import sys
+import warnings
 from functools import wraps
 from base64 import b64encode
 from contextlib import contextmanager
 import requests
 
+_UPLOAD_MANIFEST = '{{ "input": {{ "name": "{name:s}", "_filename" : ["{filename:s}"] }} }}'
+"""Manifest when uploading a document passed as JSON in the multipart/form-data POST
+request. Note the double curly is used for representing only one curly."""
+
+_WARN_DEL_DOC = (
+    "The file could not be uploaded but a document with id '{:d}' was created, "
+    "this document will be purged.")
+"""Warning when we need to delete an incomplete document due to upload error."""
+
+_WARN_DEL_ERR = (
+    "The created document could not be purged, you may need to cealn it manually: {:s}")
+"""Warning when an invalid document could not be purged."""
 
 class GLPIError(Exception):
     """Exception raised by this module."""
@@ -686,3 +699,64 @@ class GLPI:
             400: _glpi_error,
             401: _glpi_error
         }.get(response.status_code, _unknown_error)(response)
+
+    @_catch_errors
+    def upload_document(self, name, filepath):
+        """`API documentation <https://github.com
+        /glpi-project/glpi/blob/9.3/bugfixes/apirest.md#upload-a-document-file>`__
+
+        Upload the file at ``filepath`` as a document named ``name``.
+
+        .. code::
+
+            glpi.upload_document("My test document", '/path/to/file/locally')
+            {'id': 55,
+             'message': 'Item successfully added: My test document',
+             'upload_result': {'filename': [{'name': ...}]}}
+
+        There may be errors while uploading the file (like a non managed file type).
+        In this case, the API create a document but without a file attached to it.
+        This method raise a warning and purge the created but incomplete document.
+        """
+        # Open file.
+        try:
+            fhandler = open(filepath, 'rb')
+        except IOError as err:
+            raise GLPIError("unable to upload file '{:s}': {:s}".format(filepath, str(err)))
+
+        # The current session has 'application/json' as Content-Type header which
+        # is incompatible with upload ('multipath/form-data' is required). So
+        # manage custom headers without the Content-Type header that will be set
+        # by 'requests' library (in particular the boundary required by the
+        # 'multipart/form-data' request).
+        headers = self.session.headers.copy()
+        del headers['Content-Type']
+
+        # Generate input and post request.
+        files = {
+            'uploadManifest': (
+                None,
+                _UPLOAD_MANIFEST.format(name=name, filename=os.path.basename(filepath)),
+                'application/json'
+            ),
+            'filename[0]': (filepath, fhandler)
+        }
+        upload_url = self._set_method('Document')
+        response = requests.post(url=upload_url, headers=headers, files=files)
+
+        # Manage response.
+        if response.status_code != 201:
+            _glpi_error(response)
+
+        doc_id = response.json()['id']
+        error = response.json()['upload_result']['filename'][0].get('error', None)
+        if error is not None:
+            warnings.warn(_WARN_DEL_DOC.format(doc_id), UserWarning)
+            try:
+                self.delete('Document', {'id': doc_id}, force_purge=True)
+            except GLPIError as err:
+                warnings.warn(_WARN_DEL_ERR.format(doc_id, str(err)), UserWarning)
+            raise GLPIError('(ERROR_GLPI_INVALID_DOCUMENT) {:s}'.format(error))
+
+        fhandler.close()
+        return response.json()
