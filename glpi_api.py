@@ -296,7 +296,7 @@ class GLPI:
         }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
-    def get_active_entity(self):
+    def get_active_entities(self):
         """`API documentation
         <https://github.com/glpi-project/glpi/blob/master/apirest.md#get-active-entities>`_
 
@@ -317,7 +317,7 @@ class GLPI:
         }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
-    def set_active_entity(self, entity_id='all', is_recursive=False):
+    def set_active_entities(self, entity_id, is_recursive=False):
         """`API documentation
         <https://github.com/glpi-project/glpi/blob/master/apirest.md#change-active-entities>`__
 
