@@ -21,5 +21,5 @@ API
               get_full_session, get_config,
               get_item, get_all_items, get_sub_items, get_multiple_items,
               list_search_options, field_id, field_uid, search,
-              add, update, delete
+              add, update, delete, upload_document, download_document
     :member-order: bysource
