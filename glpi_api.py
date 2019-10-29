@@ -327,7 +327,7 @@ class GLPI:
 
             >>> glpi.set_active_entity(0, is_recursive=True)
         """
-        data = {'entity_id': entity_id, 'is_recursive': is_recursive}
+        data = {'entities_id': entity_id, 'is_recursive': is_recursive}
         response = self.session.post(self._set_method('changeActiveEntities'),
                                      json=data)
         return {
