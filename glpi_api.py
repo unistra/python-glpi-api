@@ -27,6 +27,8 @@ _WARN_DEL_ERR = (
     "The created document could not be purged, you may need to cealn it manually: {:s}")
 """Warning when an invalid document could not be purged."""
 
+_FILENAME_RE = re.compile('^filename="(.+)";')
+
 class GLPIError(Exception):
     """Exception raised by this module."""
 
@@ -760,3 +762,38 @@ class GLPI:
 
         fhandler.close()
         return response.json()
+
+    @_catch_errors
+    def download_document(self, doc_id, dirpath, filename=None):
+        """`API documentation <https://github.com
+        /glpi-project/glpi/blob/9.3/bugfixes/apirest.md#download-a-document-file>`__
+
+        Download the file of the document with id ``doc_id`` in the directory
+        ``dirpath``. If ``filename`` is not set, the name of the file is retrieved
+        from the server otherwise the given value is used. The local path of the file
+        is returned by the method
+
+        .. code::
+
+            glpi.download_file(1, '/tmp')
+            /tmp/test.txt
+            glpi.download_file(1, '/tmp', filename='thenameiwant.txt')
+            /tmp/thenameiwant.txt
+        """
+        if not os.path.exists(dirpath):
+            raise GLPIError("unable to download file of document '{:d}': directory "
+                            "'{:s}' does not exists".format(doc_id, dirpath))
+
+        headers = self.session.headers.copy()
+        headers['Accept'] = 'application/octet-stream'
+        response = self.session.get(self._set_method('Document', doc_id), headers=headers)
+        if response.status_code != 200:
+            _glpi_error(response)
+
+        filename = (
+            filename
+            or _FILENAME_RE.search(response.headers['Content-disposition']).groups()[0])
+        filepath = os.path.join(dirpath, filename)
+        with open(filepath, 'wb') as fhandler:
+            fhandler.write(response.content)
+        return filepath
