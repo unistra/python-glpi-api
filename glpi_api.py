@@ -690,6 +690,9 @@ class GLPI:
             # Purge computers.
             >>> glpi.delete('Computer', {'id': 2}, {'id': 5}, force_purge=True)
             [{'2': True, 'message': ''}, {'5': True, 'message': ''}]
+            # With non existing items
+            >>> glpi.delete('Computer', {'id': 2}, {'id': 101}, force_purge=True)
+            [{'2': True, 'message': ''}, {'101': False, 'message': 'Item not found'}]
         """
         response = self.session.delete(self._set_method(itemtype),
                                        params=_convert_bools(kwargs),
@@ -698,7 +701,7 @@ class GLPI:
             200: lambda r: r.json(),
             204: lambda r: r.json(),
             207: lambda r: r.json()[1],
-            400: _glpi_error,
+            400: lambda r: _glpi_error(r) if r.json()[0] != 'ERROR_GLPI_DELETE' else r.json()[1],
             401: _glpi_error
         }.get(response.status_code, _unknown_error)(response)
 
