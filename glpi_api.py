@@ -269,7 +269,7 @@ class GLPI:
         response = self.session.post(self._set_method('changeActiveProfile'),
                                      json={'profiles_id': profile_id})
         {
-            200: lambda r: None,
+            200: lambda r: bool(response.text),
             400: _glpi_error,
             401: _glpi_error,
             404: _glpi_error
@@ -331,7 +331,7 @@ class GLPI:
         response = self.session.post(self._set_method('changeActiveEntities'),
                                      json=data)
         return {
-            200: lambda r: None,
+            200: lambda r: bool(response.text),
             400: _glpi_error,
             401: _glpi_error
         }.get(response.status_code, _unknown_error)(response)
