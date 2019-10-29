@@ -720,35 +720,26 @@ class GLPI:
 
         There may be errors while uploading the file (like a non managed file type).
         In this case, the API create a document but without a file attached to it.
-        This method raise a warning and purge the created but incomplete document.
+        This method raise a warning (and another warning if the document could not
+        be deleted for some reasons) and purge the created but incomplete document.
         """
-        # Open file.
-        try:
-            fhandler = open(filepath, 'rb')
-        except IOError as err:
-            raise GLPIError("unable to upload file '{:s}': {:s}".format(filepath, str(err)))
+        with open(filepath, 'rb') as fhandler:
+            response = requests.post(
+                url=self._set_method('Document'),
+                headers={
+                    'Session-Token': self.session.headers['Session-Token'],
+                    'App-Token': self.session.headers['App-Token']
+                },
+                files={
+                    'uploadManifest': (
+                        None,
+                        _UPLOAD_MANIFEST.format(name=name, filename=os.path.basename(filepath)),
+                        'application/json'
+                    ),
+                    'filename[0]': (filepath, fhandler)
+                }
+            )
 
-        # The current session has 'application/json' as Content-Type header which
-        # is incompatible with upload ('multipath/form-data' is required). So
-        # manage custom headers without the Content-Type header that will be set
-        # by 'requests' library (in particular the boundary required by the
-        # 'multipart/form-data' request).
-        headers = self.session.headers.copy()
-        del headers['Content-Type']
-
-        # Generate input and post request.
-        files = {
-            'uploadManifest': (
-                None,
-                _UPLOAD_MANIFEST.format(name=name, filename=os.path.basename(filepath)),
-                'application/json'
-            ),
-            'filename[0]': (filepath, fhandler)
-        }
-        upload_url = self._set_method('Document')
-        response = requests.post(url=upload_url, headers=headers, files=files)
-
-        # Manage response.
         if response.status_code != 201:
             _glpi_error(response)
 
@@ -762,7 +753,6 @@ class GLPI:
                 warnings.warn(_WARN_DEL_ERR.format(doc_id, str(err)), UserWarning)
             raise GLPIError('(ERROR_GLPI_INVALID_DOCUMENT) {:s}'.format(error))
 
-        fhandler.close()
         return response.json()
 
     @_catch_errors
@@ -773,7 +763,7 @@ class GLPI:
         Download the file of the document with id ``doc_id`` in the directory
         ``dirpath``. If ``filename`` is not set, the name of the file is retrieved
         from the server otherwise the given value is used. The local path of the file
-        is returned by the method
+        is returned by the method.
 
         .. code::
 
@@ -786,15 +776,18 @@ class GLPI:
             raise GLPIError("unable to download file of document '{:d}': directory "
                             "'{:s}' does not exists".format(doc_id, dirpath))
 
-        headers = self.session.headers.copy()
-        headers['Accept'] = 'application/octet-stream'
-        response = self.session.get(self._set_method('Document', doc_id), headers=headers)
+        response = self.session.get(
+            url=self._set_method('Document', doc_id),
+            headers={
+                'Session-Token': self.session.headers['Session-Token'],
+                'App-Token': self.session.headers['App-Token'],
+                'Accept': 'application/octet-stream'
+            }
+        )
         if response.status_code != 200:
             _glpi_error(response)
 
-        filename = (
-            filename
-            or _FILENAME_RE.search(response.headers['Content-disposition']).groups()[0])
+        filename = filename or _FILENAME_RE.findall(response.headers['Content-disposition'])[0]
         filepath = os.path.join(dirpath, filename)
         with open(filepath, 'wb') as fhandler:
             fhandler.write(response.content)
