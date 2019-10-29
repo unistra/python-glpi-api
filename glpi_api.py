@@ -150,8 +150,7 @@ class GLPI:
     @_catch_errors
     def _init_session(self, apptoken, auth):
         """API documentation
-        <https://github.com/glpi-project
-        /glpi/blob/9.3/bugfixes/apirest.md#init-session>`__
+        <https://github.com/glpi-project/glpi/blob/master/apirest.md#init-session>`__
 
         Request a session token to uses other API endpoints. ``auth`` can either be
         a string containing the user token of a list/tuple containing username
@@ -182,8 +181,8 @@ class GLPI:
 
     @_catch_errors
     def kill_session(self):
-        """`API documentation <https://github.com
-        /glpi-project/glpi/blob/9.3/bugfixes/apirest.md#kill-session>`__
+        """`API documentation
+        <https://github.com/glpi-project/glpi/blob/master/apirest.md#kill-session>`__
 
         Destroy a session identified by a session token. Note that this
         method is automatically called by the context manager ``connect``.
@@ -205,8 +204,8 @@ class GLPI:
 
     @_catch_errors
     def get_my_profiles(self):
-        """`API documentation <https://github.com
-        /glpi-project/glpi/blob/9.3/bugfixes/apirest.md#get-my-profiles>`__
+        """`API documentation
+        <https://github.com/glpi-project/glpi/blob/master/apirest.md#get-my-profiles>`__
 
         Return all the profiles associated to logged user.
 
@@ -229,8 +228,8 @@ class GLPI:
 
     @_catch_errors
     def get_active_profile(self):
-        """`API documentation <https://github.com/glpi-project
-        /glpi/blob/9.3/bugfixes/apirest.md#get-active-profile>`__
+        """`API documentation
+        <https://github.com/glpi-project/glpi/blob/master/apirest.md#get-active-profile>`__
 
         Return the current active profile.
 
@@ -252,8 +251,8 @@ class GLPI:
 
     @_catch_errors
     def set_active_profile(self, profile_id):
-        """`API documentation <https://github.com
-        /glpi-project/glpi/blob/9.3/bugfixes/apirest.md#change-active-profile>`__
+        """`API documentation
+        <https://github.com/glpi-project/glpi/blob/master/apirest.md#change-active-profile>`__
 
         Change active profile to the ``profile_id`` one.
 
@@ -278,8 +277,8 @@ class GLPI:
 
     @_catch_errors
     def get_my_entities(self):
-        """`API documentation <https://github.com/glpi-project
-        /glpi/blob/9.3/bugfixes/apirest.md#get-my-entities>`__
+        """`API documentation
+        <https://github.com/glpi-project/glpi/blob/master/apirest.md#get-my-entities>`__
 
         Return all the possible entities of the current logged user (and for
         current active profile).
@@ -298,8 +297,8 @@ class GLPI:
 
     @_catch_errors
     def get_active_entity(self):
-        """`API documentation <https://github.com/glpi-project
-        /glpi/blob/9.3/bugfixes/apirest.md#get-active-entities>`_
+        """`API documentation
+        <https://github.com/glpi-project/glpi/blob/master/apirest.md#get-active-entities>`_
 
         Return active entities of current logged user.
 
@@ -319,8 +318,8 @@ class GLPI:
 
     @_catch_errors
     def set_active_entity(self, entity_id='all', is_recursive=False):
-        """`API documentation <https://github.com
-        /glpi-project/glpi/blob/9.3/bugfixes/apirest.md#get-full-session>`__
+        """`API documentation
+        <https://github.com/glpi-project/glpi/blob/master/apirest.md#change-active-entities>`__
 
         Change active entity to the ``entitie_id``.
 
@@ -339,8 +338,8 @@ class GLPI:
 
     @_catch_errors
     def get_full_session(self):
-        """`API documentation <https://github.com
-        /glpi-project/glpi/blob/9.3/bugfixes/apirest.md#get-full-session>`__
+        """`API documentation
+        <https://github.com/glpi-project/glpi/blob/master/apirest.md#get-full-session>`__
 
         Return the current php $_SESSION.
 
@@ -361,8 +360,8 @@ class GLPI:
 
     @_catch_errors
     def get_config(self):
-        """`API documentation <https://github.com
-        /glpi-project/glpi/blob/9.3/bugfixes/apirest.md#get-glpi-config>`__
+        """`API documentation
+        <https://github.com/glpi-project/glpi/blob/master/apirest.md#get-glpi-config>`__
 
         Return the current $CFG_GLPI.
 
@@ -382,8 +381,8 @@ class GLPI:
 
     @_catch_errors
     def get_item(self, itemtype, item_id, **kwargs):
-        """`API documentation <https://github.com
-        /glpi-project/glpi/blob/9.3/bugfixes/apirest.md#get-an-item)>`__
+        """`API documentation
+        <https://github.com/glpi-project/glpi/blob/master/apirest.md#get-an-item)>`__
 
         Return the instance fields of ``itemtype`` identified by ``item_id``.
         ``kwargs`` contains additional parameters allowed by the API.
@@ -420,8 +419,8 @@ class GLPI:
 
     @_catch_errors
     def get_all_items(self, itemtype, **kwargs):
-        """`API documentation <https://github.com
-        /glpi-project/glpi/blob/9.3/bugfixes/apirest.md#get-all-items>`__
+        """`API documentation
+        <https://github.com/glpi-project/glpi/blob/master/apirest.md#get-all-items>`__
 
         Return a collection of rows of the ``itemtype``. ``kwargs`` contains
         additional parameters allowed by the API.
@@ -449,8 +448,8 @@ class GLPI:
 
     @_catch_errors
     def get_sub_items(self, itemtype, item_id, sub_itemtype, **kwargs):
-        """`API documentation <https://github.com/
-        glpi-project/glpi/blob/9.3/bugfixes/apirest.md#get-sub-items>`__
+        """`API documentation
+        <https://github.com/glpi-project/glpi/blob/master/apirest.md#get-sub-items>`__
 
         Return a collection of rows of the ``sub_itemtype`` for the identified
         item of type ``itemtype`` and id ``item_id``. ``kwargs`` contains
@@ -476,8 +475,8 @@ class GLPI:
 
     @_catch_errors
     def get_multiple_items(self, *items):
-        """`API documentation <https://github.com
-        /glpi-project/glpi/blob/9.3/bugfixes/apirest.md#get-multiple-items>`__
+        """`API documentation
+        <https://github.com/glpi-project/glpi/blob/master/apirest.md#get-multiple-items>`__
 
         Virtually call Get an item for each line in input. So, you can have a
         ticket, a user in the same query.
@@ -509,8 +508,8 @@ class GLPI:
 
     @_catch_errors
     def list_search_options(self, itemtype, raw=False):
-        """`API documentation <https://github.com
-        /glpi-project/glpi/blob/9.3/bugfixes/apirest.md#list-searchoptions>`__
+        """`API documentation
+        <https://github.com/glpi-project/glpi/blob/master/apirest.md#list-searchoptions>`__
 
         List the searchoptions of provided ``itemtype``. ``raw`` return searchoption
         uncleaned (as provided by core).
@@ -576,8 +575,8 @@ class GLPI:
 
     @_catch_errors
     def search(self, itemtype, **kwargs):
-        """`API documentation <https://github.com
-        /glpi-project/glpi/blob/9.3/bugfixes/apirest.md#search-items>`__
+        """`API documentation
+        <https://github.com/glpi-project/glpi/blob/master/apirest.md#search-items>`__
 
         Expose the GLPI searchEngine and combine criteria to retrieve a list of
         elements of specified ``itemtype``.
@@ -630,7 +629,7 @@ class GLPI:
     @_catch_errors
     def add(self, itemtype, *items):
         """`API documentation <https://github.com
-        /glpi-project/glpi/blob/9.3/bugfixes/apirest.md#add-items>`__
+        /glpi-project/glpi/blob/master/apirest.md#add-items>`__
 
         Add an object (or multiple objects) of type ``itemtype`` into GLPI.
 
@@ -652,8 +651,8 @@ class GLPI:
 
     @_catch_errors
     def update(self, itemtype, *items):
-        """`API documentation <https://github.com
-        /glpi-project/glpi/blob/9.3/bugfixes/apirest.md#update-items>`__
+        """`API documentation
+        <https://github.com/glpi-project/glpi/blob/master/apirest.md#update-items>`__
 
         Update an object (or multiple objects) existing in GLPI.
 
@@ -678,7 +677,7 @@ class GLPI:
     @_catch_errors
     def delete(self, itemtype, *items, **kwargs):
         """`API documentation <https://github.com
-        /glpi-project/glpi/blob/9.3/bugfixes/apirest.md#delete-items>`__
+        /glpi-project/glpi/blob/master/apirest.md#delete-items>`__
 
         Delete an object existing in GLPI.
 
@@ -707,8 +706,8 @@ class GLPI:
 
     @_catch_errors
     def upload_document(self, name, filepath):
-        """`API documentation <https://github.com
-        /glpi-project/glpi/blob/9.3/bugfixes/apirest.md#upload-a-document-file>`__
+        """`API documentation
+        <https://github.com/glpi-project/glpi/blob/master/apirest.md#upload-a-document-file>`__
 
         Upload the file at ``filepath`` as a document named ``name``.
 
@@ -768,8 +767,8 @@ class GLPI:
 
     @_catch_errors
     def download_document(self, doc_id, dirpath, filename=None):
-        """`API documentation <https://github.com
-        /glpi-project/glpi/blob/9.3/bugfixes/apirest.md#download-a-document-file>`__
+        """`API documentation
+        <https://github.com/glpi-project/glpi/blob/master/apirest.md#download-a-document-file>`__
 
         Download the file of the document with id ``doc_id`` in the directory
         ``dirpath``. If ``filename`` is not set, the name of the file is retrieved
