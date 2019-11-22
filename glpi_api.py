@@ -608,8 +608,10 @@ class GLPI:
                     else self.field_id(itemtype, field))
 
         # Format 'criteria' and 'metacriteria' parameters.
-        kwargs.update({'{:s}[{:d}][{:s}]'.format(param, idx, filter_param):
-                        field_id(itemtype, value) if filter_param == 'field' else value
+        kwargs.update({'{:s}[{:d}][{:s}]'.format(param, idx, filter_param): (
+                            field_id(itemtype, value)
+                            if filter_param == 'field'
+                            else value.replace("'", "''"))
                        for param in ('criteria', 'metacriteria')
                        for idx, c in enumerate(kwargs.pop(param, []) or [])
                        for filter_param, value in c.items()})
