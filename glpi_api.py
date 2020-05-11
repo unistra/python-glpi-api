@@ -145,7 +145,7 @@ class GLPI:
 
     def _set_method(self, *endpoints):
         """Generate the URL from ``endpoints``."""
-        return os.path.join(self.url, *[str(endpoint) for endpoint in endpoints])
+        return '/'.join(str(part) for part in [self.url.strip('/'), *endpoints])
 
     @_catch_errors
     def _init_session(self, apptoken, auth):
