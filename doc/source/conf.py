@@ -27,9 +27,9 @@ copyright = u'2018, François Ménabé'
 author = u'François Ménabé'
 
 # The short X.Y version
-version = '0.1.0'
+version = '0.2.2'
 # The full version, including alpha/beta/rc tags
-release = '0.1.0'
+release = '0.2.2'
 
 
 # -- General configuration ---------------------------------------------------
