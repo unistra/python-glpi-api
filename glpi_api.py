@@ -550,10 +550,15 @@ class GLPI:
             >>> glpi.field_id('Computer', 'Entity.completename')
             80
         """
-        # Retrieve and store fields for itemtype.
+        # If this is already an id, just return it
+        if re.match(r'^\d+$', str(field_uid)):
+            return int(field_uid)
+
+        # Retrieve and cache fields for itemtype.
         if itemtype not in self._fields or refresh:
             self._fields[itemtype] = self._map_fields(itemtype)
-        return self._fields[itemtype][str(field_uid)]
+
+        return int(self._fields[itemtype][str(field_uid)])
 
     def field_uid(self, itemtype, field_id, refresh=False):
         """Return ``itemtype`` field uid from ``field_id``. Each ``itemtype``
@@ -572,6 +577,52 @@ class GLPI:
         return {value: key
                 for key, value in self._fields[itemtype].items()
                }[str(field_id)]
+
+    def _add_forcedisplay(self, itemtype, value):
+        return {
+            'forcedisplay[{:d}]'.format(idx): self.field_id(itemtype, field)
+            for idx, field in enumerate(value)
+        }
+
+    def _add_criteria(self, criteria, itemtype, parent=None):
+        '''
+        Recursively generate criteria/metacriteria parameters.
+        '''
+        if not any(isinstance(criteria, t) for t in (list, tuple, set)):
+            raise GLPIError(
+                'search criteria should be a list, found: {:s}'.format(str(type(criteria)))
+            )
+
+        params = {}
+        for idx, criterion in enumerate(criteria):
+            criterion_key = (
+                'criteria[{:d}]'.format(idx)
+                if parent is None
+                else parent + '[criteria][{:d}]'.format(idx)
+            )
+
+            params.update(
+                self._add_criteria(
+                    criterion.pop('criteria', []),
+                    itemtype,
+                    parent=criterion_key
+                )
+            )
+
+            # Add parameters
+            params.update(
+                {
+                    '{:s}[{:s}]'.format(criterion_key, p): (
+                        # for 'field' key, map field id
+                        self.field_id(itemtype, v)
+                        if p == 'field'
+                        else (v.replace("'", "''") if isinstance(v, str) else v)
+                    )
+                    for p, v in criterion.items()
+                }
+            )
+
+        return params
 
     @_catch_errors
     def search(self, itemtype, **kwargs):
@@ -601,26 +652,19 @@ class GLPI:
             >>> glpi.search('Computer', criteria=criteria, forcedisplay=forcedisplay)
             [{'1': 'test', '80': 'Root entity', '45': 'Ubuntu', '46': 16.04}]
         """
-        # Function for mapping field id from field uid if field_id is not a number.
-        def field_id(itemtype, field):
-            return (int(field)
-                    if re.match(r'^\d+$', str(field))
-                    else self.field_id(itemtype, field))
+        params = {}
+        # Format forcedisplay parameter
+        params.update(self._add_forcedisplay(itemtype, kwargs.pop('forcedisplay', [])))
+        # Add criteria and metacriteria
+        criteria = kwargs.pop('criteria', [])
+        for criterion in kwargs.pop('metacriteria', []):
+            criterion['meta'] = True
+            criteria.append(criterion)
+        params.update(self._add_criteria(criteria, itemtype))
+        # Add other parameters
+        params.update(kwargs)
 
-        # Format 'criteria' and 'metacriteria' parameters.
-        kwargs.update({'{:s}[{:d}][{:s}]'.format(param, idx, filter_param): (
-                            field_id(itemtype, value)
-                            if filter_param == 'field'
-                            else value.replace("'", "''"))
-                       for param in ('criteria', 'metacriteria')
-                       for idx, c in enumerate(kwargs.pop(param, []) or [])
-                       for filter_param, value in c.items()})
-        # Format 'forcedisplay' parameters.
-        kwargs.update({'forcedisplay[{:d}]'.format(idx): field_id(itemtype, field)
-                       for idx, field in enumerate(kwargs.pop('forcedisplay', []) or [])})
-
-        response = self.session.get(self._set_method('search', itemtype),
-                                    params=kwargs)
+        response = self.session.get(self._set_method('search', itemtype), params=params)
         return {
             200: lambda r: r.json().get('data', []),
             206: lambda r: r.json().get('data', []),
