@@ -552,13 +552,13 @@ class GLPI:
         """
         # If this is already an id, just return it
         if re.match(r'^\d+$', str(field_uid)):
-            return int(field_uid)
+            return str(field_uid)
 
         # Retrieve and cache fields for itemtype.
         if itemtype not in self._fields or refresh:
             self._fields[itemtype] = self._map_fields(itemtype)
 
-        return int(self._fields[itemtype][str(field_uid)])
+        return str(self._fields[itemtype][str(field_uid)])
 
     def field_uid(self, itemtype, field_id, refresh=False):
         """Return ``itemtype`` field uid from ``field_id``. Each ``itemtype``
