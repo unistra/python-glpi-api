@@ -33,7 +33,7 @@ class GLPIError(Exception):
     """Exception raised by this module."""
 
 @contextmanager
-def connect(url, apptoken, auth, verify_certs=True):
+def connect(url, apptoken, auth, verify_certs=True, use_headers=True):
     """Context manager that authenticate to GLPI when enter and kill application
     session in GLPI when leaving:
 
@@ -53,7 +53,7 @@ def connect(url, apptoken, auth, verify_certs=True):
 
     You can set ``verify_certs`` to *False* to ignore invalid SSL certificates.
     """
-    glpi = GLPI(url, apptoken, auth, verify_certs)
+    glpi = GLPI(url, apptoken, auth, verify_certs, use_headers=use_headers)
     try:
         yield glpi
     finally:
@@ -117,7 +117,7 @@ class GLPI:
                    apptoken='YOURAPPTOKEN',
                    auth=('USERNAME', 'PASSWORD'))
     """
-    def __init__(self, url, apptoken, auth, verify_certs=True):
+    def __init__(self, url, apptoken, auth, verify_certs=True, use_headers=True):
         """Connect to GLPI and retrieve session token which is put in a
         ``requests`` session as attribute.
         """
@@ -131,7 +131,7 @@ class GLPI:
             self.session.verify = False
 
         # Connect and retrieve token.
-        session_token = self._init_session(apptoken, auth)
+        session_token = self._init_session(apptoken, auth, use_headers=use_headers)
 
         # Set required headers.
         self.session.headers = {
@@ -148,30 +148,42 @@ class GLPI:
         return '/'.join(str(part) for part in [self.url.strip('/'), *endpoints])
 
     @_catch_errors
-    def _init_session(self, apptoken, auth):
+    def _init_session(self, apptoken, auth, use_headers=True):
         """API documentation
         <https://github.com/glpi-project/glpi/blob/master/apirest.md#init-session>`__
 
-        Request a session token to uses other API endpoints. ``auth`` can either be
-        a string containing the user token of a list/tuple containing username
-        and password.
+        Request a session token (will be sent alongside `apptoken` for next API calls).
+        ``auth`` can either be a string containing the user token of a list/tuple
+        of two elements containing username and password.
+
+        By default authorization parameters are sent through headers. In some cases
+        this does not work so they can also be sent as GET parameters by unsetting
+        `use_headers` argument (by setting it to *False*).
         """
-        # Manage Authorization heade.
+        init_headers = {
+            'Content-Type': 'application/json',
+            'App-Token': apptoken
+        }
+        params = {}
+
         if isinstance(auth, (list, tuple)):
             if len(auth) > 2:
                 raise GLPIError("invalid 'auth' parameter (should contains "
                                 'username and password)')
-            authorization = 'Basic {:s}'.format(b64encode(':'.join(auth).encode()).decode())
+            if use_headers:
+                authorization = 'Basic {:s}'.format(b64encode(':'.join(auth).encode()).decode())
+                init_headers.update(Authorization=authorization)
+            else:
+                params.update(login=auth[0], password=auth[1])
         else:
-            authorization = 'user_token {:s}'.format(auth)
+            if use_headers:
+                init_headers.update(Authorization='user_token {:s}'.format(auth))
+            else:
+                params.update(user_token=auth)
 
-        init_headers = {
-            'Content-Type': 'application/json',
-            'Authorization': authorization,
-            'App-Token': apptoken
-        }
         response = self.session.get(url=self._set_method('initSession'),
-                                    headers=init_headers)
+                                    headers=init_headers,
+                                    params=params)
 
         return {
             200: lambda r: r.json()['session_token'],
