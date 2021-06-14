@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name='glpi-api',
-    version='0.3.0',
+    version='0.3.1',
     author='François Ménabé',
     author_email='francois.menabe@unistra.fr',
     url='https://git.unistra.fr/di/glpi/python-glpi-api',
