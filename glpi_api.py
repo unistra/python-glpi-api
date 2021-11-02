@@ -52,6 +52,12 @@ def connect(url, apptoken, auth, verify_certs=True, use_headers=True):
         >>>     print(str(err))
 
     You can set ``verify_certs`` to *False* to ignore invalid SSL certificates.
+
+    ``use_headers`` indicates whether authentication parameters are sent through HTTP
+    headers or as GET parameters (in the URL). The default is to use headers but
+    some environments (cf `this GLPI issue
+    <https://github.com/glpi-project/glpi/issues/5116#issuecomment-496166674>`_ and
+    the following Stack Overflow post) may require to use GET parameters.
     """
     glpi = GLPI(url, apptoken, auth, verify_certs, use_headers=use_headers)
     try:
@@ -116,6 +122,10 @@ class GLPI:
        glpi = GLPI(url='https://glpi.exemple.com/apirest.php',
                    apptoken='YOURAPPTOKEN',
                    auth=('USERNAME', 'PASSWORD'))
+
+    `verify_certs` and `use_headers` can be unset to respectively not checking
+    SSL certificates and passing authentication parameters as GET parameters
+    (instead of headers).
     """
     def __init__(self, url, apptoken, auth, verify_certs=True, use_headers=True):
         """Connect to GLPI and retrieve session token which is put in a
@@ -155,10 +165,6 @@ class GLPI:
         Request a session token (will be sent alongside `apptoken` for next API calls).
         ``auth`` can either be a string containing the user token of a list/tuple
         of two elements containing username and password.
-
-        By default authorization parameters are sent through headers. In some cases
-        this does not work so they can also be sent as GET parameters by unsetting
-        `use_headers` argument (by setting it to *False*).
         """
         init_headers = {
             'Content-Type': 'application/json',
