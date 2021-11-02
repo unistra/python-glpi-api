@@ -4,19 +4,17 @@ from setuptools import setup
 
 setup(
     name='glpi-api',
-    version='0.3.1',
+    version='0.3.2',
     author='François Ménabé',
     author_email='francois.menabe@unistra.fr',
-    url='https://git.unistra.fr/di/glpi/python-glpi-api',
-    download_url='https://git.unistra.fr/di/ansible/roles/glpi/deploy/tags/',
+    url='https://github.com/unistra/python-glpi-api',
     license='GPLv3+',
     description='Wrap calls to GLPI REST API.',
     long_description=open('README.rst').read(),
     keywords=['rest', 'api', 'glpi'],
     classifiers=[
         'License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)',
-        'Development Status :: 4 - Beta',
-        'Programming Language :: Python :: 2.7',
+        'Development Status :: 5 - Production/Stable',
         'Programming Language :: Python :: 3'
     ],
     py_modules=['glpi_api'],
