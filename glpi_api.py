@@ -13,6 +13,7 @@ from functools import wraps
 from base64 import b64encode
 from contextlib import contextmanager
 import requests
+from typing import Union, Sequence, List, Callable, Optional, Any, Iterator
 
 _UPLOAD_MANIFEST = '{{ "input": {{ "name": "{name:s}", "_filename" : ["{filename:s}"] }} }}'
 """Manifest when uploading a document passed as JSON in the multipart/form-data POST
@@ -32,40 +33,7 @@ _FILENAME_RE = re.compile('^filename="(.+)";')
 class GLPIError(Exception):
     """Exception raised by this module."""
 
-@contextmanager
-def connect(url, apptoken, auth, verify_certs=True, use_headers=True):
-    """Context manager that authenticate to GLPI when enter and kill application
-    session in GLPI when leaving:
-
-    .. code::
-
-        >>> import glpi_api
-        >>>
-        >>> URL = 'https://glpi.exemple.com/apirest.php'
-        >>> APPTOKEN = 'YOURAPPTOKEN'
-        >>> USERTOKEN = 'YOURUSERTOKEN'
-        >>>
-        >>> try:
-        >>>     with glpi_api.connect(URL, APPTOKEN, USERTOKEN) as glpi:
-        >>>         print(glpi.get_config())
-        >>> except glpi_api.GLPIError as err:
-        >>>     print(str(err))
-
-    You can set ``verify_certs`` to *False* to ignore invalid SSL certificates.
-
-    ``use_headers`` indicates whether authentication parameters are sent through HTTP
-    headers or as GET parameters (in the URL). The default is to use headers but
-    some environments (cf `this GLPI issue
-    <https://github.com/glpi-project/glpi/issues/5116#issuecomment-496166674>`_ and
-    the following Stack Overflow post) may require to use GET parameters.
-    """
-    glpi = GLPI(url, apptoken, auth, verify_certs, use_headers=use_headers)
-    try:
-        yield glpi
-    finally:
-        glpi.kill_session()
-
-def _raise(msg):
+def _raise(msg: str) -> None:
     """Raise ``GLPIError`` exception with ``msg`` message.
 
     In Python 2, exceptions expect ``str`` by default. ``requests`` module
@@ -75,25 +43,25 @@ def _raise(msg):
     to ``str`` the message.
     """
     if sys.version_info.major < 3:
-        msg = msg.encode('utf-8')
+        msg = msg.encode('utf-8') # type: ignore
     raise GLPIError(msg)
 
-def _glpi_error(response):
+def _glpi_error(response) -> None:
     """GLPI errors message are returned in a list of two elements. The first
     element is the key of the error and the second the message."""
     _raise('({}) {}'.format(*response.json()))
 
-def _unknown_error(response):
+def _unknown_error(response) -> None:
     """Helper for returning a HTTP code and response on non managed status
     code."""
     _raise('unknown error: [{:d}/{:s}] {:s}'
            .format(response.status_code, response.reason, response.text))
 
-def _convert_bools(kwargs):
+def _convert_bools(kwargs: dict) -> dict:
     return {key: str(val).lower() if isinstance(val, bool) else val
             for key, val in kwargs.items()}
 
-def _catch_errors(func):
+def _catch_errors(func: Callable) -> Callable:
     """Decorator function for catching communication error
     and raising an exception."""
     @wraps(func)
@@ -127,7 +95,13 @@ class GLPI:
     SSL certificates and passing authentication parameters as GET parameters
     (instead of headers).
     """
-    def __init__(self, url, apptoken, auth, verify_certs=True, use_headers=True):
+    def __init__(self,
+                 url: str,
+                 apptoken: str,
+                 auth: Union[str, Sequence[str]],
+                 verify_certs: bool = True,
+                 use_headers: bool = True
+                 ) -> None:
         """Connect to GLPI and retrieve session token which is put in a
         ``requests`` session as attribute.
         """
@@ -148,17 +122,21 @@ class GLPI:
             'Content-Type': 'application/json',
             'Session-Token': session_token,
             'App-Token': apptoken
-        }
+        } # type: ignore
 
         # Use for caching field id/uid map.
-        self._fields = {}
+        self._fields: dict = {}
 
-    def _set_method(self, *endpoints):
+    def _set_method(self, *endpoints: Union[str, int]) -> str:
         """Generate the URL from ``endpoints``."""
         return '/'.join(str(part) for part in [self.url.strip('/'), *endpoints])
 
     @_catch_errors
-    def _init_session(self, apptoken, auth, use_headers=True):
+    def _init_session(self,
+                      apptoken: str,
+                      auth: Union[str, Sequence[str]],
+                      use_headers = True
+                      ) -> Optional[str]:
         """API documentation
         <https://github.com/glpi-project/glpi/blob/master/apirest.md#init-session>`__
 
@@ -170,7 +148,7 @@ class GLPI:
             'Content-Type': 'application/json',
             'App-Token': apptoken
         }
-        params = {}
+        params: dict = {}
 
         if isinstance(auth, (list, tuple)):
             if len(auth) > 2:
@@ -198,7 +176,7 @@ class GLPI:
         }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
-    def kill_session(self):
+    def kill_session(self) -> None:
         """`API documentation
         <https://github.com/glpi-project/glpi/blob/master/apirest.md#kill-session>`__
 
@@ -221,7 +199,7 @@ class GLPI:
         }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
-    def get_my_profiles(self):
+    def get_my_profiles(self) -> Optional[dict]:
         """`API documentation
         <https://github.com/glpi-project/glpi/blob/master/apirest.md#get-my-profiles>`__
 
@@ -245,7 +223,7 @@ class GLPI:
         }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
-    def get_active_profile(self):
+    def get_active_profile(self) -> Optional[dict]:
         """`API documentation
         <https://github.com/glpi-project/glpi/blob/master/apirest.md#get-active-profile>`__
 
@@ -268,7 +246,7 @@ class GLPI:
         }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
-    def set_active_profile(self, profile_id):
+    def set_active_profile(self, profile_id: int) -> None:
         """`API documentation
         <https://github.com/glpi-project/glpi/blob/master/apirest.md#change-active-profile>`__
 
@@ -294,7 +272,7 @@ class GLPI:
         }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
-    def get_my_entities(self):
+    def get_my_entities(self) -> Optional[List[dict]]:
         """`API documentation
         <https://github.com/glpi-project/glpi/blob/master/apirest.md#get-my-entities>`__
 
@@ -314,7 +292,7 @@ class GLPI:
         }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
-    def get_active_entities(self):
+    def get_active_entities(self) -> Optional[dict]:
         """`API documentation
         <https://github.com/glpi-project/glpi/blob/master/apirest.md#get-active-entities>`_
 
@@ -335,7 +313,7 @@ class GLPI:
         }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
-    def set_active_entities(self, entity_id, is_recursive=False):
+    def set_active_entities(self, entity_id: int, is_recursive: bool=False) -> Optional[bool]:
         """`API documentation
         <https://github.com/glpi-project/glpi/blob/master/apirest.md#change-active-entities>`__
 
@@ -355,7 +333,7 @@ class GLPI:
         }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
-    def get_full_session(self):
+    def get_full_session(self) -> Optional[dict]:
         """`API documentation
         <https://github.com/glpi-project/glpi/blob/master/apirest.md#get-full-session>`__
 
@@ -377,7 +355,7 @@ class GLPI:
         }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
-    def get_config(self):
+    def get_config(self) -> Optional[dict]:
         """`API documentation
         <https://github.com/glpi-project/glpi/blob/master/apirest.md#get-glpi-config>`__
 
@@ -398,7 +376,7 @@ class GLPI:
         }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
-    def get_item(self, itemtype, item_id, **kwargs):
+    def get_item(self, itemtype: str, item_id: int, **kwargs: Any) -> Optional[dict]:
         """`API documentation
         <https://github.com/glpi-project/glpi/blob/master/apirest.md#get-an-item)>`__
 
@@ -436,7 +414,7 @@ class GLPI:
         }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
-    def get_all_items(self, itemtype, **kwargs):
+    def get_all_items(self, itemtype: str, **kwargs: Any) -> Optional[List[dict]]:
         """`API documentation
         <https://github.com/glpi-project/glpi/blob/master/apirest.md#get-all-items>`__
 
@@ -465,7 +443,12 @@ class GLPI:
         }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
-    def get_sub_items(self, itemtype, item_id, sub_itemtype, **kwargs):
+    def get_sub_items(self,
+                      itemtype: str,
+                      item_id: int,
+                      sub_itemtype: str,
+                      **kwargs: Any
+                      ) -> Optional[List[dict]]:
         """`API documentation
         <https://github.com/glpi-project/glpi/blob/master/apirest.md#get-sub-items>`__
 
@@ -492,7 +475,7 @@ class GLPI:
         }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
-    def get_multiple_items(self, *items):
+    def get_multiple_items(self, *items: dict) -> Optional[List[dict]]:
         """`API documentation
         <https://github.com/glpi-project/glpi/blob/master/apirest.md#get-multiple-items>`__
 
@@ -525,7 +508,7 @@ class GLPI:
         }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
-    def list_search_options(self, itemtype, raw=False):
+    def list_search_options(self, itemtype: str, raw: bool=False) -> Optional[dict]:
         """`API documentation
         <https://github.com/glpi-project/glpi/blob/master/apirest.md#list-searchoptions>`__
 
@@ -551,14 +534,14 @@ class GLPI:
             401: _glpi_error
         }.get(response.status_code, _unknown_error)(response)
 
-    def _map_fields(self, itemtype):
+    def _map_fields(self, itemtype: str) -> dict:
         """Private method that returns a mapping between fields uid and fields
         id."""
         return {field['uid'].replace('{:s}.'.format(itemtype), ''): field_id
                 for field_id, field in self.list_search_options(itemtype).items()
                 if 'uid' in field}
 
-    def field_id(self, itemtype, field_uid, refresh=False):
+    def field_id(self, itemtype: str, field_uid: str, refresh: bool=False) -> str:
         """Return ``itemtype`` field id from ``field_uid``. Each ``itemtype``
         are "cached" (in *_fields* attribute) and will be retrieve once except
         if ``refresh`` is set.
@@ -578,7 +561,7 @@ class GLPI:
 
         return str(self._fields[itemtype][str(field_uid)])
 
-    def field_uid(self, itemtype, field_id, refresh=False):
+    def field_uid(self, itemtype: str, field_id: int, refresh: bool=False) -> str:
         """Return ``itemtype`` field uid from ``field_id``. Each ``itemtype``
         are "cached" (in *_fields* attribute) and will be retrieve once except
         if ``refresh`` is set.
@@ -596,13 +579,17 @@ class GLPI:
                 for key, value in self._fields[itemtype].items()
                }[str(field_id)]
 
-    def _add_forcedisplay(self, itemtype, value):
+    def _add_forcedisplay(self, itemtype: str, value: Sequence[Union[str, int]]) -> dict:
         return {
-            'forcedisplay[{:d}]'.format(idx): self.field_id(itemtype, field)
+            'forcedisplay[{:d}]'.format(idx): self.field_id(itemtype, str(field))
             for idx, field in enumerate(value)
         }
 
-    def _add_criteria(self, criteria, itemtype, parent=None):
+    def _add_criteria(self,
+                      criteria: dict,
+                      itemtype: str,
+                      parent :str=None
+                      ) -> dict:
         '''
         Recursively generate criteria/metacriteria parameters.
         '''
@@ -643,7 +630,7 @@ class GLPI:
         return params
 
     @_catch_errors
-    def search(self, itemtype, **kwargs):
+    def search(self, itemtype: str, **kwargs: Any) -> Optional[List[dict]]:
         """`API documentation
         <https://github.com/glpi-project/glpi/blob/master/apirest.md#search-items>`__
 
@@ -691,7 +678,7 @@ class GLPI:
         }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
-    def add(self, itemtype, *items):
+    def add(self, itemtype: str, *items: dict) -> Optional[List[dict]]:
         """`API documentation <https://github.com
         /glpi-project/glpi/blob/master/apirest.md#add-items>`__
 
@@ -714,7 +701,7 @@ class GLPI:
         }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
-    def update(self, itemtype, *items):
+    def update(self, itemtype: str, *items: dict) -> Optional[List[dict]]:
         """`API documentation
         <https://github.com/glpi-project/glpi/blob/master/apirest.md#update-items>`__
 
@@ -739,7 +726,7 @@ class GLPI:
         }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
-    def delete(self, itemtype, *items, **kwargs):
+    def delete(self, itemtype: str, *items: dict, **kwargs: Any) -> Optional[List[dict]]:
         """`API documentation <https://github.com
         /glpi-project/glpi/blob/master/apirest.md#delete-items>`__
 
@@ -769,7 +756,7 @@ class GLPI:
         }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
-    def upload_document(self, name, filepath):
+    def upload_document(self, name: str, filepath: str) -> dict:
         """`API documentation
         <https://github.com/glpi-project/glpi/blob/master/apirest.md#upload-a-document-file>`__
 
@@ -820,7 +807,11 @@ class GLPI:
         return response.json()
 
     @_catch_errors
-    def download_document(self, doc_id, dirpath, filename=None):
+    def download_document(self,
+                          doc_id: int,
+                          dirpath: str,
+                          filename: Optional[str]=None
+                          ) -> str:
         """`API documentation
         <https://github.com/glpi-project/glpi/blob/master/apirest.md#download-a-document-file>`__
 
@@ -856,3 +847,41 @@ class GLPI:
         with open(filepath, 'wb') as fhandler:
             fhandler.write(response.content)
         return filepath
+
+@contextmanager
+def connect(url: str,
+            apptoken: str,
+            auth: Union[str, Sequence[str]],
+            verify_certs: bool = True,
+            use_headers: bool = True
+            ) -> Iterator[GLPI]:
+    """Context manager that authenticate to GLPI when enter and kill application
+    session in GLPI when leaving:
+
+    .. code::
+
+        >>> import glpi_api
+        >>>
+        >>> URL = 'https://glpi.exemple.com/apirest.php'
+        >>> APPTOKEN = 'YOURAPPTOKEN'
+        >>> USERTOKEN = 'YOURUSERTOKEN'
+        >>>
+        >>> try:
+        >>>     with glpi_api.connect(URL, APPTOKEN, USERTOKEN) as glpi:
+        >>>         print(glpi.get_config())
+        >>> except glpi_api.GLPIError as err:
+        >>>     print(str(err))
+
+    You can set ``verify_certs`` to *False* to ignore invalid SSL certificates.
+
+    ``use_headers`` indicates whether authentication parameters are sent through HTTP
+    headers or as GET parameters (in the URL). The default is to use headers but
+    some environments (cf `this GLPI issue
+    <https://github.com/glpi-project/glpi/issues/5116#issuecomment-496166674>`_ and
+    the following Stack Overflow post) may require to use GET parameters.
+    """
+    glpi = GLPI(url, apptoken, auth, verify_certs, use_headers=use_headers)
+    try:
+        yield glpi
+    finally:
+        glpi.kill_session()
