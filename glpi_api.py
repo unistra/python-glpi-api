@@ -621,7 +621,7 @@ class GLPI:
 
             params.update(
                 self._add_criteria(
-                    criterion.pop('criteria', []),
+                    criterion.get('criteria', []),
                     itemtype,
                     parent=criterion_key
                 )
@@ -637,6 +637,7 @@ class GLPI:
                         else (v.replace("'", "''") if isinstance(v, str) else v)
                     )
                     for p, v in criterion.items()
+                    if p != 'criteria'
                 }
             )
 
