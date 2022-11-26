@@ -554,7 +554,7 @@ class GLPI:
     def _map_fields(self, itemtype):
         """Private method that returns a mapping between fields uid and fields
         id."""
-        return {field['uid'].replace('{:s}.'.format(itemtype), ''): field_id
+        return {re.sub('^{:s}.'.format(itemtype), '', field['uid']): field_id
                 for field_id, field in self.list_search_options(itemtype).items()
                 if 'uid' in field}
 
