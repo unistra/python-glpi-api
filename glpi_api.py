@@ -435,6 +435,17 @@ class GLPI:
             404: lambda r: None
         }.get(response.status_code, _unknown_error)(response)
 
+    def _add_searchtext(self, searchText):
+        '''
+        Generate searchText parameter.
+        '''
+        if not isinstance(searchText, dict):
+            raise GLPIError(
+                'search text should be a dict, found: {:s}'.format(str(type(searchText)))
+            )
+
+        return {'searchText[{:s}]'.format(k): v for k, v in searchText.items()}
+
     @_catch_errors
     def get_all_items(self, itemtype, **kwargs):
         """`API documentation
@@ -454,7 +465,11 @@ class GLPI:
             # Retrieve deleted computers.
             >>> glpi.get_all_items('Computer', is_deleted=True)
             []
+            # Using searchText.
+            >>> glpi.get_all_items('Computer', searchText={'name':'server'})
+            []
         """
+        kwargs.update(self._add_searchtext(kwargs.pop('searchText', {})))
         response = self.session.get(self._set_method(itemtype),
                                     params=_convert_bools(kwargs))
         return {
