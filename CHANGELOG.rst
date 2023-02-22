@@ -1,6 +1,12 @@
 Changelog
 ----------
 
+0.4.0 (2023-02-22)
+~~~~~~~~~~~~~~~~~~
+
+* Support *searchText* parameter in `get_all_items` api call
+  (https://github.com/unistra/python-glpi-api/pull/17)
+
 0.3.5 (2022-11-26)
 ~~~~~~~~~~~~~~~~~~
 
