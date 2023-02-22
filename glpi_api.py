@@ -444,11 +444,7 @@ class GLPI:
                 'search text should be a dict, found: {:s}'.format(str(type(searchText)))
             )
 
-        params = {}
-        for key, value in searchText.items():
-            params.update({'searchText[{:s}]'.format(key): value})
-
-        return params
+        return {'searchText[{:s}]'.format(k): v for k, v in searchText.items()}
 
     @_catch_errors
     def get_all_items(self, itemtype, **kwargs):
@@ -473,11 +469,9 @@ class GLPI:
             >>> glpi.get_all_items('Computer', searchText={'name':'server'})
             []
         """
-        params = {}
-        params.update(kwargs)
-        params.update(self._add_searchtext(kwargs.pop('searchText', {})))
+        kwargs.update(self._add_searchtext(kwargs.pop('searchText', {})))
         response = self.session.get(self._set_method(itemtype),
-                                    params=_convert_bools(params))
+                                    params=_convert_bools(kwargs))
         return {
             200: lambda r: r.json(),
             206: lambda r: r.json(),
