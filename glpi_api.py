@@ -728,6 +728,35 @@ class GLPI:
             400: _glpi_error,
             401: _glpi_error
         }.get(response.status_code, _unknown_error)(response)
+    
+    @_catch_errors
+    def add_sub_items(self, itemtype, item_id, sub_itemtype, *items):
+        """`API documentation
+        Same method used as get-sub-items, same parameter
+        <https://github.com/glpi-project/glpi/blob/master/apirest.md#get-sub-items>`__
+
+        Add a collection of rows of the ``sub_itemtype`` for the identified
+        item of type ``itemtype`` and id ``item_id``. ``kwargs`` contains
+        additional parameters allowed by the API.
+
+        .. code::
+
+            # Add a operatingsystem of a computer.
+            >>> In [241]: glpi.add_sub_items('Computer',1,'Item_OperatingSystem',{'items_id': 1 ,'itemtype':'Computer','operatingsystems_id':1 })
+            [{'id': 261,
+              'itemtype': 'Computer',
+              'items_id': 1,
+            ...
+        """
+        url = self._set_method(itemtype, item_id, sub_itemtype)
+        response = self.session.post(url,
+                                    json={'input': items})
+        return {
+            201: lambda r: r.json(),
+            207: lambda r: r.json()[1],
+            400: _glpi_error,
+            401: _glpi_error
+        }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
     def update(self, itemtype, *items):
@@ -749,8 +778,39 @@ class GLPI:
                                     json={'input': items})
         return {
             200: lambda r: r.json(),
+            201: lambda r: r.json(),
             207: lambda r: r.json()[1],
             400: _glpi_error,
+            401: _glpi_error
+        }.get(response.status_code, _unknown_error)(response)
+    
+    @_catch_errors
+    def update_sub_items(self, itemtype, item_id, sub_itemtype, *items):
+        """`API documentation
+        Same method used as get-sub-items, same parameters 
+        <https://github.com/glpi-project/glpi/blob/master/apirest.md#get-sub-items>`__
+
+        Updates a collection of rows of the ``sub_itemtype`` for the identified
+        item of type ``itemtype`` and id ``item_id``. ``kwargs`` contains
+        additional parameters allowed by the API.
+
+        .. code::
+
+            # update the operatingsystem a computer.
+            >>> In [241]: glpi.update_sub_items('Computer',1,'Item_OperatingSystem' {'id': 1 ,'itemtype':'Computer','operatingsystem_id':1 })
+            [{'id': 261,
+              'itemtype': 'Computer',
+              'items_id': 1,
+            ...
+        """
+        url = self._set_method(itemtype, item_id, sub_itemtype)
+        response = self.session.put(url,
+                                    json={'input': items})
+        return {
+            200: lambda r: lambda r: r.json(),
+            201: lambda r: lambda r: r.json(),
+            207: lambda r: lambda r: r.json(),
+            400: lambda r: _glpi_error,
             401: _glpi_error
         }.get(response.status_code, _unknown_error)(response)
 
@@ -783,6 +843,37 @@ class GLPI:
             400: lambda r: _glpi_error(r) if r.json()[0] != 'ERROR_GLPI_DELETE' else r.json()[1],
             401: _glpi_error
         }.get(response.status_code, _unknown_error)(response)
+    
+    @_catch_errors
+    def delete_sub_items(self, itemtype, item_id, sub_itemtype, *items):
+        """`API documentation
+        Same method used as get-sub-items, same parameters 
+        <https://github.com/glpi-project/glpi/blob/master/apirest.md#get-sub-items>`__
+
+        deletes a collection of rows of the ``sub_itemtype`` for the identified
+        item of type ``itemtype`` and id ``item_id``. ``kwargs`` contains
+        additional parameters allowed by the API.
+
+        .. code::
+
+            # delete the operatingsystem a computer.
+            >>> In [241]: glpi.delete_sub_items('Computer',1,'Item_OperatingSystem' {'id': 1 ,'itemtype':'Computer','operatingsystem_id':1 })
+            [{'id': 261,
+              'itemtype': 'Computer',
+              'items_id': 1,
+            ...
+        """
+        url = self._set_method(itemtype, item_id, sub_itemtype)
+        response = self.session.delete(url,
+                                    json={'input': items})
+        return {
+            200: lambda r: r.json(),
+            204: lambda r: r.json(),
+            207: lambda r: r.json()[1],
+            400: lambda r: _glpi_error(r) if r.json()[0] != 'ERROR_GLPI_DELETE' else r.json()[1],
+            401: _glpi_error
+        }.get(response.status_code, _unknown_error)(response)
+
 
     @_catch_errors
     def upload_document(self, name, filepath):
