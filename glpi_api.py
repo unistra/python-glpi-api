@@ -810,7 +810,7 @@ class GLPI:
             200: lambda r: lambda r: r.json(),
             201: lambda r: lambda r: r.json(),
             207: lambda r: lambda r: r.json(),
-            400: lambda r: _glpi_error,
+            400: _glpi_error,
             401: _glpi_error
         }.get(response.status_code, _unknown_error)(response)
 
