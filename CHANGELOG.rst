@@ -1,6 +1,11 @@
 Changelog
 ----------
 
+0.5.0 (2024-01-23)
+~~~~~~~~~~~~~~~~~~
+
+* Sub items management (https://github.com/unistra/python-glpi-api/pull/22)
+
 0.4.0 (2023-02-22)
 ~~~~~~~~~~~~~~~~~~
 
