@@ -1,0 +1,44 @@
+#version: '2'
+
+volumes:
+  glpi-data:
+  glpi-mysql-data:
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=glpi-rootpassword
+      - MYSQL_PASSWORD=glpipassword
+      - MYSQL_DATABASE=glpi
+      - MYSQL_USER=glpi
+    volumes:
+      - glpi-mysql-data:/var/lib/mysql
+
+  glpi:
+    image: elestio/glpi:10.0.16
+    environment:
+      - MYSQL_PASSWORD=glpipassword
+      - MYSQL_DATABASE=glpi
+      - MYSQL_USER=glpi
+      - MYSQL_HOST=db
+      - TIMEZONE=Europe/Paris
+    ports:
+      - 127.0.0.1:8080:80
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - glpi-data:/var/www/html/glpi
+      #- ./plugins/glpi-inventory-plugin:/app/glpi/plugins/glpiinventory
+    links:
+    - mysql
+    restart: always
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "127.0.0.1:443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./certs:/etc/nginx/certs
+    restart: always
