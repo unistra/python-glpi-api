@@ -127,7 +127,8 @@ class GLPI:
     SSL certificates and passing authentication parameters as GET parameters
     (instead of headers).
     """
-    def __init__(self, url, apptoken, auth, verify_certs=True, use_headers=True):
+    def __init__(self, url, apptoken, auth, verify_certs=True, use_headers=True,
+                 user_agent=None):
         """Connect to GLPI and retrieve session token which is put in a
         ``requests`` session as attribute.
         """
@@ -141,14 +142,18 @@ class GLPI:
             self.session.verify = False
 
         # Connect and retrieve token.
-        session_token = self._init_session(apptoken, auth, use_headers=use_headers)
+        session_token = self._init_session(apptoken, auth, user_agent,
+                                           use_headers=use_headers)
 
         # Set required headers.
-        self.session.headers = {
+        headers = {
             'Content-Type': 'application/json',
             'Session-Token': session_token,
             'App-Token': apptoken
         }
+        if user_agent:
+            headers['User-Agent'] = user_agent
+        self.session.headers = headers
 
         # Use for caching field id/uid map.
         self._fields = {}
@@ -158,7 +163,7 @@ class GLPI:
         return '/'.join(str(part) for part in [self.url.strip('/'), *endpoints])
 
     @_catch_errors
-    def _init_session(self, apptoken, auth, use_headers=True):
+    def _init_session(self, apptoken, auth, user_agent, use_headers=True):
         """API documentation
         <https://github.com/glpi-project/glpi/blob/master/apirest.md#init-session>`__
 
@@ -170,6 +175,8 @@ class GLPI:
             'Content-Type': 'application/json',
             'App-Token': apptoken
         }
+        if user_agent:
+            init_headers['User-Agent'] = user_agent
         params = {}
 
         if isinstance(auth, (list, tuple)):
