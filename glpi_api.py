@@ -33,7 +33,7 @@ class GLPIError(Exception):
     """Exception raised by this module."""
 
 @contextmanager
-def connect(url, apptoken, auth, verify_certs=True, use_headers=True):
+def connect(url, apptoken, auth, verify_certs=True, use_headers=True, user_agent=None):
     """Context manager that authenticate to GLPI when enter and kill application
     session in GLPI when leaving:
 
@@ -735,7 +735,7 @@ class GLPI:
             400: _glpi_error,
             401: _glpi_error
         }.get(response.status_code, _unknown_error)(response)
-    
+
     @_catch_errors
     def add_sub_items(self, itemtype, item_id, sub_itemtype, *items):
         """`API documentation
@@ -790,11 +790,11 @@ class GLPI:
             400: _glpi_error,
             401: _glpi_error
         }.get(response.status_code, _unknown_error)(response)
-    
+
     @_catch_errors
     def update_sub_items(self, itemtype, item_id, sub_itemtype, *items):
         """`API documentation
-        Same method used as get-sub-items, same parameters 
+        Same method used as get-sub-items, same parameters
         <https://github.com/glpi-project/glpi/blob/master/apirest.md#get-sub-items>`__
 
         Updates a collection of rows of the ``sub_itemtype`` for the identified
@@ -850,11 +850,11 @@ class GLPI:
             400: lambda r: _glpi_error(r) if r.json()[0] != 'ERROR_GLPI_DELETE' else r.json()[1],
             401: _glpi_error
         }.get(response.status_code, _unknown_error)(response)
-    
+
     @_catch_errors
     def delete_sub_items(self, itemtype, item_id, sub_itemtype, *items):
         """`API documentation
-        Same method used as get-sub-items, same parameters 
+        Same method used as get-sub-items, same parameters
         <https://github.com/glpi-project/glpi/blob/master/apirest.md#get-sub-items>`__
 
         deletes a collection of rows of the ``sub_itemtype`` for the identified
