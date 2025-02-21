@@ -1,6 +1,11 @@
 Changelog
 ----------
 
+0.6.0 (2025-02-21)
+~~~~~~~~~~~~~~~~~~
+
+* Manage User Agent (https://github.com/unistra/python-glpi-api/pull/26)
+
 0.5.0 (2024-01-23)
 ~~~~~~~~~~~~~~~~~~
 
