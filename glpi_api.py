@@ -514,7 +514,7 @@ class GLPI:
         }.get(response.status_code, _unknown_error)(response)
 
     @_catch_errors
-    def get_multiple_items(self, *items):
+    def get_multiple_items(self, *items, **kwargs):
         """`API documentation
         <https://github.com/glpi-project/glpi/blob/master/apirest.md#get-multiple-items>`__
 
@@ -538,8 +538,10 @@ class GLPI:
                     for idx, item in enumerate(items)
                     for key, value in item.items()}
 
+        params = _convert_bools(kwargs)
+        params.update(format_items(items))
         response = self.session.get(self._set_method('getMultipleItems'),
-                                    params=format_items(items))
+                                    params=params)
         return {
             200: lambda r: r.json(),
             400: _glpi_error,
