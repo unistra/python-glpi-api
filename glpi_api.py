@@ -904,12 +904,9 @@ class GLPI:
         be deleted for some reasons) and purge the created but incomplete document.
         """
         with open(filepath, 'rb') as fhandler:
-            response = requests.post(
+            response = self.session.post(
                 url=self._set_method('Document'),
-                headers={
-                    'Session-Token': self.session.headers['Session-Token'],
-                    'App-Token': self.session.headers['App-Token']
-                },
+                headers={'Content-Type': None},
                 files={
                     'uploadManifest': (
                         None,
