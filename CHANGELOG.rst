@@ -1,6 +1,12 @@
 Changelog
 ----------
 
+0.7.0 (2025-03-16)
+~~~~~~~~~~~~~~~~~~
+
+* Use session when uploading documents (https://github.com/unistra/python-glpi-api/pull/29; fixes https://github.com/unistra/python-glpi-api/issues/27)
+* Support keyword arguments in get multiple devices (https://github.com/unistra/python-glpi-api/pull/28)
+
 0.6.0 (2025-02-21)
 ~~~~~~~~~~~~~~~~~~
 
